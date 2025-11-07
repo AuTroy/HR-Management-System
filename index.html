@@ -62,6 +62,14 @@
         const HistoryIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
         const AlertTriangleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>);
 
+        // Reusable InputField component
+        const InputField = ({ label, name, value, onChange, type = 'text', required = false }) => (
+            <div>
+                <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+                <input type={type} id={name} name={name} value={value} onChange={onChange} required={required} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
+            </div>
+        );
+
         // =========== COMPONENTS ===========
         const Header = ({ currentView, onAddEmployee, onApplyLeave }) => {
             const actionButtonConfig = {
@@ -158,6 +166,14 @@
             const emptyEmployee = { first_name: '', last_name: '', email: '', department: '', position: '', salary: 0, date_of_joining: '', date_of_birth: '', contact_number: '', emergency_contact: '', address: '' };
             const [formData, setFormData] = React.useState(employeeToEdit || emptyEmployee);
 
+            React.useEffect(() => {
+                if (employeeToEdit) {
+                    setFormData(employeeToEdit);
+                } else {
+                    setFormData(emptyEmployee);
+                }
+            }, [employeeToEdit]);
+
             const handleChange = e => {
                 const { name, value } = e.target;
                 setFormData(prev => ({ ...prev, [name]: name === 'salary' ? Number(value) : value }));
@@ -168,23 +184,16 @@
                 onSave({ ...formData, employee_id: employeeToEdit ? employeeToEdit.employee_id : undefined });
             };
 
-            const InputField = ({ label, name, type = 'text', required = false }) => (
-                <div>
-                    <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-                    <input type={type} id={name} name={name} value={formData[name]} onChange={handleChange} required={required} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
-                </div>
-            );
-
             return (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
                     <div className="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
                         <h3 className="text-lg text-center leading-6 font-medium text-gray-900 dark:text-gray-100">{employeeToEdit ? 'Edit Employee' : 'Add New Employee'}</h3>
                         <form onSubmit={handleSubmit} className="space-y-4 text-left p-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <InputField label="First Name" name="first_name" required />
-                                <InputField label="Last Name" name="last_name" required />
-                                <InputField label="Email" name="email" type="email" required />
-                                <InputField label="Contact Number" name="contact_number" type="tel" required />
+                                <InputField label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} required />
+                                <InputField label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} required />
+                                <InputField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+                                <InputField label="Contact Number" name="contact_number" type="tel" value={formData.contact_number} onChange={handleChange} required />
                                 <div>
                                     <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
                                     <select id="department" name="department" value={formData.department} onChange={handleChange} required className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
@@ -192,11 +201,11 @@
                                         {departments.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                     </select>
                                 </div>
-                                <InputField label="Position" name="position" required />
-                                <InputField label="Salary" name="salary" type="number" required />
-                                <InputField label="Date of Joining" name="date_of_joining" type="date" required />
-                                <InputField label="Date of Birth" name="date_of_birth" type="date" required />
-                                <InputField label="Emergency Contact" name="emergency_contact" />
+                                <InputField label="Position" name="position" value={formData.position} onChange={handleChange} required />
+                                <InputField label="Salary" name="salary" type="number" value={formData.salary} onChange={handleChange} required />
+                                <InputField label="Date of Joining" name="date_of_joining" type="date" value={formData.date_of_joining} onChange={handleChange} required />
+                                <InputField label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} required />
+                                <InputField label="Emergency Contact" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange} />
                             </div>
                             <div>
                                 <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
