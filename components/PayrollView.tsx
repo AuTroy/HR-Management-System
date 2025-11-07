@@ -1,6 +1,7 @@
-
 import React, { useState, useMemo } from 'react';
+// FIX: import PayrollRecord type.
 import { Employee, PayrollRecord } from '../types';
+// FIX: import ViewPayslipIcon component.
 import { ViewPayslipIcon } from './Icons';
 
 interface PayrollViewProps {

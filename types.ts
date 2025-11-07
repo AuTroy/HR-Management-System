@@ -38,7 +38,9 @@ export interface AttendanceRecord {
   check_out_time: string | null;
 }
 
-// FIX: Add PayrollRecord type for payroll components.
+// FIX: Add missing Payroll and Performance related types.
+export type PayrollStatus = 'Paid' | 'Pending';
+
 export interface PayrollRecord {
   payroll_id: number;
   employee_id: number;
@@ -47,11 +49,10 @@ export interface PayrollRecord {
   gross_salary: number;
   deductions: number;
   net_salary: number;
-  status: 'Paid' | 'Pending';
+  status: PayrollStatus;
 }
 
-// FIX: Add PerformanceRatingMetrics and PerformanceReview types for performance components.
-export type PerformanceRatingMetrics = {
+export type PerformanceRatings = {
   quality: number;
   communication: number;
   punctuality: number;
@@ -64,7 +65,7 @@ export interface PerformanceReview {
   reviewer_id: number;
   review_date: string;
   goals: string;
-  ratings: PerformanceRatingMetrics;
+  ratings: PerformanceRatings;
   comments: string;
   overall_score: number;
 }

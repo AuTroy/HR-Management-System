@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+// FIX: import PerformanceReview type.
 import { Employee, PerformanceReview } from '../types';
+// FIX: import PERFORMANCE_METRICS constant.
 import { PERFORMANCE_METRICS } from '../constants';
 
 interface PerformanceReviewModalProps {
@@ -38,7 +40,8 @@ const PerformanceReviewModal: React.FC<PerformanceReviewModalProps> = ({ review,
   const overallScore = useMemo(() => {
     const ratings = Object.values(formData.ratings);
     if (ratings.length === 0) return 0;
-    const sum = ratings.reduce((acc, curr) => acc + curr, 0);
+    // FIX: Add explicit types to reduce function to prevent type errors.
+    const sum = ratings.reduce((acc: number, curr: number) => acc + curr, 0);
     return sum / ratings.length;
   }, [formData.ratings]);
 
@@ -95,13 +98,14 @@ const PerformanceReviewModal: React.FC<PerformanceReviewModalProps> = ({ review,
             <div className="my-4">
                 <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">Performance Ratings</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-md border-gray-200 dark:border-gray-700">
-                    {Object.entries(PERFORMANCE_METRICS).map(([key, label]) => (
+                    {/* FIX: Iterate over keys in a type-safe way to avoid type errors. */}
+                    {(Object.keys(PERFORMANCE_METRICS) as Array<keyof typeof PERFORMANCE_METRICS>).map((key) => (
                         <div key={key} className="flex items-center justify-between">
-                            <label htmlFor={`rating-${key}`} className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+                            <label htmlFor={`rating-${key}`} className="text-sm font-medium text-gray-700 dark:text-gray-300">{PERFORMANCE_METRICS[key]}</label>
                             <select 
                                 id={`rating-${key}`}
-                                value={formData.ratings[key as keyof typeof PERFORMANCE_METRICS]}
-                                onChange={(e) => handleRatingChange(key as keyof typeof PERFORMANCE_METRICS, Number(e.target.value))}
+                                value={formData.ratings[key]}
+                                onChange={(e) => handleRatingChange(key, Number(e.target.value))}
                                 className="w-20 input-style"
                             >
                                 {[1,2,3,4,5].map(v => <option key={v} value={v}>{v}</option>)}

@@ -1,13 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF--8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+<head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Employee Management System</title>
+    <title>HR Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-  <script type="importmap">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
@@ -17,8 +18,470 @@
 }
 </script>
 </head>
-  <body class="bg-gray-100 dark:bg-gray-900">
+<body class="bg-gray-100 dark:bg-gray-900">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+    <script type="text/babel">
+        // =========== CONSTANTS ===========
+        const DEPARTMENTS = [
+            "Engineering",
+            "Human Resources",
+            "Marketing",
+            "Sales",
+            "Finance",
+            "Product Management"
+        ];
+        const LEAVE_TYPES = ['Sick', 'Vacation', 'Personal'];
+        const INITIAL_EMPLOYEES = [
+            { employee_id: 101, first_name: "Jane", last_name: "Doe", email: "jane.doe@example.com", department: "Engineering", position: "Senior Software Engineer", salary: 120000, date_of_joining: "2021-06-15", date_of_birth: "1990-05-20", contact_number: "123-456-7890", emergency_contact: "John Doe (Spouse) - 098-765-4321", address: "123 Main St, Anytown, USA" },
+            { employee_id: 102, first_name: "John", last_name: "Smith", email: "john.smith@example.com", department: "Marketing", position: "Marketing Manager", salary: 95000, date_of_joining: "2020-02-10", date_of_birth: "1988-11-30", contact_number: "234-567-8901", emergency_contact: "Mary Smith (Sister) - 109-876-5432", address: "456 Oak Ave, Anytown, USA" },
+            { employee_id: 103, first_name: "Emily", last_name: "Jones", email: "emily.jones@example.com", department: "Human Resources", position: "HR Specialist", salary: 75000, date_of_joining: "2022-09-01", date_of_birth: "1995-03-12", contact_number: "345-678-9012", emergency_contact: "David Jones (Father) - 210-987-6543", address: "789 Pine Ln, Anytown, USA" },
+            { employee_id: 104, first_name: "Michael", last_name: "Brown", email: "michael.brown@example.com", department: "Sales", position: "Sales Representative", salary: 80000, date_of_joining: "2023-01-20", date_of_birth: "1992-08-25", contact_number: "456-789-0123", emergency_contact: "Sarah Brown (Wife) - 321-098-7654", address: "101 Maple Dr, Anytown, USA" },
+            { employee_id: 105, first_name: "Chris", last_name: "Lee", email: "chris.lee@example.com", department: "Engineering", position: "DevOps Engineer", salary: 110000, date_of_joining: "2022-03-18", date_of_birth: "1991-07-07", contact_number: "567-890-1234", emergency_contact: "Patricia Lee (Mother) - 432-109-8765", address: "212 Birch Rd, Anytown, USA" }
+        ];
+        const INITIAL_LEAVE_REQUESTS = [
+            { request_id: 1, employee_id: 101, start_date: "2024-08-05", end_date: "2024-08-07", leave_type: "Vacation", status: "Approved", reason: "Family trip." },
+            { request_id: 2, employee_id: 102, start_date: "2024-07-29", end_date: "2024-07-29", leave_type: "Sick", status: "Approved", reason: "Doctor's appointment." },
+            { request_id: 3, employee_id: 105, start_date: "2024-08-12", end_date: "2024-08-16", leave_type: "Vacation", status: "Pending", reason: "Going to the beach." },
+            { request_id: 4, employee_id: 104, start_date: "2024-08-01", end_date: "2024-08-02", leave_type: "Personal", status: "Rejected", reason: "Attending a friend's wedding." }
+        ];
+        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); const yesterdayString = yesterday.toISOString().split('T')[0];
+        const INITIAL_ATTENDANCE_RECORDS = [
+            { record_id: 1, employee_id: 101, date: yesterdayString, check_in_time: new Date(new Date(yesterday).setHours(9, 2, 15)).toISOString(), check_out_time: new Date(new Date(yesterday).setHours(17, 5, 22)).toISOString() },
+            { record_id: 2, employee_id: 102, date: yesterdayString, check_in_time: new Date(new Date(yesterday).setHours(8, 55, 41)).toISOString(), check_out_time: new Date(new Date(yesterday).setHours(17, 3, 11)).toISOString() },
+            { record_id: 3, employee_id: 103, date: yesterdayString, check_in_time: new Date(new Date(yesterday).setHours(9, 15, 0)).toISOString(), check_out_time: null },
+            { record_id: 4, employee_id: 101, date: new Date().toISOString().split('T')[0], check_in_time: new Date(new Date().setHours(9, 0, 10)).toISOString(), check_out_time: null }
+        ];
+
+        // =========== ICONS ===========
+        const EditIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>);
+        const DeleteIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>);
+        const ApproveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>);
+        const RejectIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>);
+        const ClockIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
+        const HistoryIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
+        const AlertTriangleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>);
+
+        // =========== COMPONENTS ===========
+        const Header = ({ currentView, onAddEmployee, onApplyLeave }) => {
+            const actionButtonConfig = {
+                employees: { label: 'Add Employee', handler: onAddEmployee },
+                leave: { label: 'Apply for Leave', handler: onApplyLeave },
+                attendance: null,
+            };
+            const currentAction = actionButtonConfig[currentView];
+
+            return (
+                <header className="bg-white dark:bg-gray-800 shadow-md">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-20">
+                            <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">HR Management System</h1>
+                            {currentAction && (
+                                <button
+                                    onClick={currentAction.handler}
+                                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                                    <svg className="w-5 h-5 mr-2 -ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                    {currentAction.label}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        const ConfirmationModal = ({ employee, onConfirm, onCancel }) => (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+                <div className="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800">
+                    <div className="sm:flex sm:items-start p-4">
+                        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10"><AlertTriangleIcon /></div>
+                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Delete Employee</h3>
+                            <div className="mt-2">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Are you sure you want to delete <span className="font-bold">{employee.first_name} {employee.last_name}</span>? This action is permanent and cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-md">
+                        <button type="button" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm" onClick={onConfirm}>Delete</button>
+                        <button type="button" className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 sm:mt-0 sm:w-auto sm:text-sm" onClick={onCancel}>Cancel</button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const EmployeeList = ({ employees, onEdit, onDelete }) => (
+            <div className="overflow-x-auto">
+                {employees.length > 0 ? (
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-700/50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Position</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Joining Date</th>
+                                <th className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {employees.map(employee => (
+                                <tr key={employee.employee_id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{employee.first_name} {employee.last_name}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">{employee.email}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-900 dark:text-gray-100">{employee.position}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">{employee.department}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{employee.contact_number}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{new Date(employee.date_of_joining).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div className="flex items-center justify-end space-x-4">
+                                            <button onClick={() => onEdit(employee)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"><EditIcon /></button>
+                                            <button onClick={() => onDelete(employee)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"><DeleteIcon /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <div className="text-center py-16"><h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No Employees Found</h3></div>
+                )}
+            </div>
+        );
+
+        const EmployeeFormModal = ({ employeeToEdit, onSave, onClose, departments }) => {
+            const emptyEmployee = { first_name: '', last_name: '', email: '', department: '', position: '', salary: 0, date_of_joining: '', date_of_birth: '', contact_number: '', emergency_contact: '', address: '' };
+            const [formData, setFormData] = React.useState(employeeToEdit || emptyEmployee);
+
+            const handleChange = e => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: name === 'salary' ? Number(value) : value }));
+            };
+
+            const handleSubmit = e => {
+                e.preventDefault();
+                onSave({ ...formData, employee_id: employeeToEdit ? employeeToEdit.employee_id : undefined });
+            };
+
+            const InputField = ({ label, name, type = 'text', required = false }) => (
+                <div>
+                    <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+                    <input type={type} id={name} name={name} value={formData[name]} onChange={handleChange} required={required} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
+                </div>
+            );
+
+            return (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+                    <div className="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+                        <h3 className="text-lg text-center leading-6 font-medium text-gray-900 dark:text-gray-100">{employeeToEdit ? 'Edit Employee' : 'Add New Employee'}</h3>
+                        <form onSubmit={handleSubmit} className="space-y-4 text-left p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <InputField label="First Name" name="first_name" required />
+                                <InputField label="Last Name" name="last_name" required />
+                                <InputField label="Email" name="email" type="email" required />
+                                <InputField label="Contact Number" name="contact_number" type="tel" required />
+                                <div>
+                                    <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
+                                    <select id="department" name="department" value={formData.department} onChange={handleChange} required className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                        <option value="">Select a department</option>
+                                        {departments.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+                                </div>
+                                <InputField label="Position" name="position" required />
+                                <InputField label="Salary" name="salary" type="number" required />
+                                <InputField label="Date of Joining" name="date_of_joining" type="date" required />
+                                <InputField label="Date of Birth" name="date_of_birth" type="date" required />
+                                <InputField label="Emergency Contact" name="emergency_contact" />
+                            </div>
+                            <div>
+                                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
+                                <textarea id="address" name="address" rows="3" value={formData.address} onChange={handleChange} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
+                            </div>
+                            <div className="items-center px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 sm:ml-3 sm:w-auto sm:text-sm">Save</button>
+                                <button type="button" onClick={onClose} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const FilterControls = ({ departments, filterDepartment, setFilterDepartment, searchTerm, setSearchTerm }) => (
+            <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                        <input type="text" id="search" className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="Search by name, email, position..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    </div>
+                    <div>
+                        <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Department</label>
+                        <select id="department" className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" value={filterDepartment} onChange={e => setFilterDepartment(e.target.value)}>
+                            <option value="all">All Departments</option>
+                            {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const LeaveManagementView = ({ leaveRequests, employees, onUpdateStatus }) => {
+            const [filterStatus, setFilterStatus] = React.useState('all');
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const employeeMap = React.useMemo(() => new Map(employees.map(emp => [emp.employee_id, emp])), [employees]);
+
+            const filteredLeaveRequests = React.useMemo(() => leaveRequests
+                .filter(req => filterStatus === 'all' || req.status === filterStatus)
+                .filter(req => {
+                    const emp = employeeMap.get(req.employee_id);
+                    return emp ? `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) : false;
+                }), [leaveRequests, filterStatus, searchTerm, employeeMap]);
+
+            const statusColors = { Pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300', Approved: 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300', Rejected: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300' };
+
+            return (
+                <div>
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-100">Leave Requests</h2>
+                    </div>
+                    <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" className="mt-1 block w-full input-style" placeholder="Search by Employee..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                            <select className="mt-1 block w-full input-style" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                                <option value="all">All Statuses</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead className="bg-gray-50 dark:bg-gray-700/50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Employee</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Dates</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Type</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                    <th className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                {filteredLeaveRequests.map(req => {
+                                    const employee = employeeMap.get(req.employee_id);
+                                    return (<tr key={req.request_id}>
+                                        <td className="px-6 py-4">{employee ? `${employee.first_name} ${employee.last_name}` : 'Unknown'}</td>
+                                        <td className="px-6 py-4">{new Date(req.start_date).toLocaleDateString()} - {new Date(req.end_date).toLocaleDateString()}</td>
+                                        <td className="px-6 py-4">{req.leave_type}</td>
+                                        <td className="px-6 py-4"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[req.status]}`}>{req.status}</span></td>
+                                        <td className="px-6 py-4 text-right">
+                                            {req.status === 'Pending' && <div className="flex justify-end space-x-2"><button onClick={() => onUpdateStatus(req.request_id, 'Approved')} className="text-green-600"><ApproveIcon /></button><button onClick={() => onUpdateStatus(req.request_id, 'Rejected')} className="text-red-600"><RejectIcon /></button></div>}
+                                        </td>
+                                    </tr>);
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+        
+        const LeaveFormModal = ({ employees, leaveTypes, onSave, onClose }) => {
+            const [formData, setFormData] = React.useState({ employee_id: '', leave_type: 'Vacation', start_date: new Date().toISOString().split('T')[0], end_date: new Date().toISOString().split('T')[0], reason: '' });
+            const [error, setError] = React.useState('');
+            
+            const handleChange = e => setFormData(prev => ({...prev, [e.target.name]: e.target.value}));
+
+            const handleSubmit = e => {
+                e.preventDefault();
+                if (!formData.employee_id) { setError('Please select an employee.'); return; }
+                if (new Date(formData.start_date) > new Date(formData.end_date)) { setError('End date cannot be before start date.'); return; }
+                setError('');
+                onSave({ ...formData, employee_id: Number(formData.employee_id) });
+            };
+
+            return (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+                    <div className="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white dark:bg-gray-800">
+                        <h3 className="text-lg text-center font-medium">Apply for Leave</h3>
+                        <form onSubmit={handleSubmit} className="mt-4 space-y-4 text-left px-4">
+                            <select name="employee_id" value={formData.employee_id} onChange={handleChange} required className="mt-1 block w-full input-style"><option value="">Select an employee...</option>{employees.map(e => <option key={e.employee_id} value={e.employee_id}>{e.first_name} {e.last_name}</option>)}</select>
+                            <div className="grid grid-cols-2 gap-4"><input type="date" name="start_date" value={formData.start_date} onChange={handleChange} required className="mt-1 block w-full input-style" /><input type="date" name="end_date" value={formData.end_date} onChange={handleChange} required className="mt-1 block w-full input-style" /></div>
+                            <select name="leave_type" value={formData.leave_type} onChange={handleChange} required className="mt-1 block w-full input-style">{leaveTypes.map(t => <option key={t} value={t}>{t}</option>)}</select>
+                            <textarea name="reason" value={formData.reason} onChange={handleChange} rows="3" required className="mt-1 block w-full input-style" placeholder="Reason for leave..."></textarea>
+                            {error && <p className="text-sm text-red-500">{error}</p>}
+                            <div className="items-center px-4 py-3 sm:px-0 sm:flex sm:flex-row-reverse">
+                                <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 sm:ml-3 sm:w-auto sm:text-sm">Submit</button>
+                                <button type="button" onClick={onClose} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <style>{`.input-style { shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 }`}</style>
+                </div>
+            );
+        };
+
+        const AttendanceView = ({ employees, attendanceRecords, onCheckIn, onCheckOut, onViewLog }) => {
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const employeeStatusMap = React.useMemo(() => {
+                const map = new Map();
+                employees.forEach(emp => {
+                    const latest = [...attendanceRecords].filter(r => r.employee_id === emp.employee_id).sort((a, b) => new Date(b.check_in_time) - new Date(a.check_in_time))[0];
+                    map.set(emp.employee_id, (latest && !latest.check_out_time) ? 'Checked In' : 'Checked Out');
+                });
+                return map;
+            }, [employees, attendanceRecords]);
+            
+            const filteredEmployees = React.useMemo(() => employees.filter(e => `${e.first_name} ${e.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())), [employees, searchTerm]);
+
+            return (
+                <div>
+                    <div className="p-6 border-b"><h2 className="text-2xl font-semibold">Attendance Status</h2></div>
+                    <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-b"><input type="text" className="mt-1 block w-full md:w-1/2 input-style" placeholder="Search Employee..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} /></div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                             <thead className="bg-gray-50 dark:bg-gray-700/50"><tr><th className="px-6 py-3 text-left text-xs font-medium uppercase">Employee</th><th className="px-6 py-3 text-left text-xs font-medium uppercase">Status</th><th className="relative px-6 py-3"></th></tr></thead>
+                             <tbody className="bg-white dark:bg-gray-800 divide-y">
+                                {filteredEmployees.map(emp => {
+                                    const status = employeeStatusMap.get(emp.employee_id);
+                                    return (<tr key={emp.employee_id}>
+                                        <td className="px-6 py-4">{emp.first_name} {emp.last_name}</td>
+                                        <td className="px-6 py-4"><div className="flex items-center"><span className={`h-2.5 w-2.5 rounded-full mr-2 ${status === 'Checked In' ? 'bg-green-500' : 'bg-gray-400'}`}></span><span>{status}</span></div></td>
+                                        <td className="px-6 py-4 text-right"><div className="flex justify-end space-x-2">
+                                            <button onClick={() => onViewLog(emp)} className="flex items-center px-3 py-2 border rounded-md text-sm"><HistoryIcon /><span className="ml-2 hidden sm:inline">Log</span></button>
+                                            {status === 'Checked Out' ? <button onClick={() => onCheckIn(emp.employee_id)} className="flex items-center px-3 py-2 rounded-md text-sm text-white bg-green-600"><ClockIcon /><span className="ml-2">Check In</span></button> : <button onClick={() => onCheckOut(emp.employee_id)} className="flex items-center px-3 py-2 rounded-md text-sm text-white bg-red-600"><ClockIcon /><span className="ml-2">Check Out</span></button>}
+                                        </div></td>
+                                    </tr>);
+                                })}
+                             </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+        
+        const AttendanceLogModal = ({ employee, records, onClose }) => {
+            const formatTime = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+            const calculateHours = (start, end) => end ? `${((new Date(end) - new Date(start)) / 36e5).toFixed(2)} hrs` : '-';
+            const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            return (
+                 <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+                    <div className="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+                        <h3 className="text-lg text-center font-medium">Attendance Log: {employee.first_name} {employee.last_name}</h3>
+                        <div className="mt-4 px-2 py-3 max-h-[60vh] overflow-y-auto">
+                           {sorted.length > 0 ? <table className="min-w-full divide-y">
+                                <thead className="bg-gray-50 dark:bg-gray-700/50 sticky top-0"><tr><th className="px-6 py-3 text-left text-xs font-medium uppercase">Date</th><th className="px-6 py-3 text-left text-xs font-medium uppercase">Check In</th><th className="px-6 py-3 text-left text-xs font-medium uppercase">Check Out</th><th className="px-6 py-3 text-left text-xs font-medium uppercase">Total Hours</th></tr></thead>
+                                <tbody className="bg-white dark:bg-gray-800 divide-y">{sorted.map(r => <tr key={r.record_id}><td className="px-6 py-4">{new Date(r.date).toLocaleDateString()}</td><td className="px-6 py-4">{formatTime(r.check_in_time)}</td><td className="px-6 py-4">{formatTime(r.check_out_time)}</td><td className="px-6 py-4 font-medium">{calculateHours(r.check_in_time, r.check_out_time)}</td></tr>)}</tbody>
+                           </table> : <p className="text-center py-8">No records found.</p>}
+                        </div>
+                        <div className="items-center px-4 py-3"><button onClick={onClose} className="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full">Close</button></div>
+                    </div>
+                 </div>
+            );
+        };
+
+        // =========== APP ===========
+        const App = () => {
+            // Helper to load data from localStorage or use initial data
+            const loadState = (key, initialData) => {
+                try {
+                    const saved = localStorage.getItem(key);
+                    if (saved) return JSON.parse(saved);
+                } catch (e) {
+                    console.error("Failed to parse localStorage data:", e);
+                }
+                return initialData;
+            };
+
+            // State Management
+            const [employees, setEmployees] = React.useState(() => loadState('hrm_employees', INITIAL_EMPLOYEES));
+            const [leaveRequests, setLeaveRequests] = React.useState(() => loadState('hrm_leave_requests', INITIAL_LEAVE_REQUESTS));
+            const [attendanceRecords, setAttendanceRecords] = React.useState(() => loadState('hrm_attendance_records', INITIAL_ATTENDANCE_RECORDS));
+
+            // Persist state to localStorage on change
+            React.useEffect(() => { localStorage.setItem('hrm_employees', JSON.stringify(employees)); }, [employees]);
+            React.useEffect(() => { localStorage.setItem('hrm_leave_requests', JSON.stringify(leaveRequests)); }, [leaveRequests]);
+            React.useEffect(() => { localStorage.setItem('hrm_attendance_records', JSON.stringify(attendanceRecords)); }, [attendanceRecords]);
+
+            // UI State
+            const [currentView, setCurrentView] = React.useState('employees');
+            const [modals, setModals] = React.useState({ employee: false, leave: false, attendance: false, confirmation: false });
+            const [activeData, setActiveData] = React.useState({ employee: null });
+            const [filterDepartment, setFilterDepartment] = React.useState('all');
+            const [searchTerm, setSearchTerm] = React.useState('');
+
+            const openModal = (name, data = null) => {
+                setActiveData(prev => ({...prev, ...data}));
+                setModals(prev => ({...prev, [name]: true}));
+            };
+            const closeModal = (name) => {
+                 setModals(prev => ({...prev, [name]: false}));
+                 setActiveData({ employee: null });
+            };
+            
+            // Handlers
+            const handleSaveEmployee = (data) => {
+                setEmployees(prev => data.employee_id ? prev.map(e => e.employee_id === data.employee_id ? data : e) : [...prev, { ...data, employee_id: Math.max(0, ...prev.map(e => e.employee_id)) + 1 }]);
+                closeModal('employee');
+            };
+            const handleConfirmDelete = () => {
+                if(!activeData.employee) return;
+                setEmployees(p => p.filter(e => e.employee_id !== activeData.employee.employee_id));
+                closeModal('confirmation');
+            };
+            const handleSaveLeaveRequest = (data) => {
+                setLeaveRequests(p => [...p, {...data, request_id: Math.max(0, ...p.map(r => r.request_id)) + 1, status: 'Pending' }]);
+                closeModal('leave');
+            };
+            const handleCheckIn = (id) => setAttendanceRecords(p => [...p, { record_id: Math.max(0, ...p.map(r => r.record_id)) + 1, employee_id: id, date: new Date().toISOString().split('T')[0], check_in_time: new Date().toISOString(), check_out_time: null }]);
+            const handleCheckOut = (id) => {
+                const latest = [...attendanceRecords].filter(r => r.employee_id === id && !r.check_out_time).sort((a,b) => new Date(b.check_in_time) - new Date(a.check_in_time))[0];
+                if (latest) setAttendanceRecords(p => p.map(r => r.record_id === latest.record_id ? { ...r, check_out_time: new Date().toISOString() } : r));
+            };
+
+            const filteredEmployees = React.useMemo(() => employees
+                .filter(e => filterDepartment === 'all' || e.department === filterDepartment)
+                .filter(e => `${e.first_name} ${e.last_name} ${e.email} ${e.position}`.toLowerCase().includes(searchTerm.toLowerCase())), 
+            [employees, filterDepartment, searchTerm]);
+
+            const renderView = () => {
+                switch (currentView) {
+                    case 'employees': return <><FilterControls {...{departments: DEPARTMENTS, filterDepartment, setFilterDepartment, searchTerm, setSearchTerm}} /><EmployeeList employees={filteredEmployees} onEdit={(emp) => openModal('employee', {employee: emp})} onDelete={(emp) => openModal('confirmation', {employee: emp})} /></>;
+                    case 'leave': return <LeaveManagementView leaveRequests={leaveRequests} employees={employees} onUpdateStatus={(id, status) => setLeaveRequests(p => p.map(r => r.request_id === id ? {...r, status} : r))} />;
+                    case 'attendance': return <AttendanceView employees={employees} attendanceRecords={attendanceRecords} onCheckIn={handleCheckIn} onCheckOut={handleCheckOut} onViewLog={(emp) => openModal('attendance', {employee: emp})} />;
+                    default: return null;
+                }
+            };
+            
+            const tabs = ['employees', 'leave', 'attendance'];
+
+            return (
+                <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+                    <Header currentView={currentView} onAddEmployee={() => openModal('employee')} onApplyLeave={() => openModal('leave')} />
+                    <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
+                            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                                {tabs.map(view => (
+                                    <button key={view} onClick={() => setCurrentView(view)} className={`${currentView === view ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}>{view}</button>
+                                ))}
+                            </nav>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">{renderView()}</div>
+                    </main>
+                    {modals.employee && <EmployeeFormModal employeeToEdit={activeData.employee} onSave={handleSaveEmployee} onClose={() => closeModal('employee')} departments={DEPARTMENTS} />}
+                    {modals.confirmation && activeData.employee && <ConfirmationModal employee={activeData.employee} onConfirm={handleConfirmDelete} onCancel={() => closeModal('confirmation')} />}
+                    {modals.leave && <LeaveFormModal employees={employees} leaveTypes={LEAVE_TYPES} onSave={handleSaveLeaveRequest} onClose={() => closeModal('leave')} />}
+                    {modals.attendance && activeData.employee && <AttendanceLogModal employee={activeData.employee} records={attendanceRecords.filter(r => r.employee_id === activeData.employee.employee_id)} onClose={() => closeModal('attendance')} />}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
 </html>

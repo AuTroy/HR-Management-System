@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
+// FIX: import PerformanceReview type.
 import { Employee, PerformanceReview } from '../types';
+// FIX: import ClipboardListIcon component.
 import { ClipboardListIcon } from './Icons';
 
 interface PerformanceViewProps {

@@ -1,5 +1,5 @@
-
 import React from 'react';
+// FIX: import PayrollRecord type.
 import { Employee, PayrollRecord } from '../types';
 
 interface PayslipModalProps {

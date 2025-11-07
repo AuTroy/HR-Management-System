@@ -1,5 +1,5 @@
 
-import { Employee, LeaveRequest, LeaveType, AttendanceRecord, PerformanceRatingMetrics } from './types';
+import { Employee, LeaveRequest, LeaveType, AttendanceRecord, PerformanceRatings } from './types';
 
 export const DEPARTMENTS = [
   "Engineering",
@@ -12,12 +12,12 @@ export const DEPARTMENTS = [
 
 export const LEAVE_TYPES: LeaveType[] = ['Sick', 'Vacation', 'Personal'];
 
-// FIX: Add PERFORMANCE_METRICS constant for performance review form.
-export const PERFORMANCE_METRICS: Record<keyof PerformanceRatingMetrics, string> = {
-  quality: "Quality of Work",
-  communication: "Communication",
-  punctuality: "Punctuality & Attendance",
-  teamwork: "Teamwork & Collaboration",
+// FIX: Add PERFORMANCE_METRICS constant for performance reviews.
+export const PERFORMANCE_METRICS: Record<keyof PerformanceRatings, string> = {
+    quality: "Quality of Work",
+    communication: "Communication",
+    punctuality: "Punctuality",
+    teamwork: "Teamwork",
 };
 
 export const INITIAL_EMPLOYEES: Employee[] = [
